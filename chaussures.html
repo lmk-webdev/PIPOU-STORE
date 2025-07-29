@@ -6,7 +6,7 @@
   <title>CHAUSSURES – PIPOU Store</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body {
+   body {
       margin: 0;
       font-family: 'Inter', sans-serif;
       background-color: #f9f9f9;
@@ -192,7 +192,6 @@
     }
   </style>
 </head>
-
 <body>
 
   <header>
@@ -215,7 +214,7 @@
         <option value="">Toutes</option>
         <option value="baskets">baskets</option>
         <option value="sabots">sabots</option>
-        <option value="sneackers">sneackers</option>
+        <option value="sneakers">sneakers</option>
       </select>
       <button onclick="filtrerArticles()">Appliquer</button>
     </div>
@@ -223,7 +222,7 @@
     <div class="articles" id="articles-list"></div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal et Zoom identiques -->
   <div class="modal" id="article-modal">
     <div class="modal-content">
       <span class="close-button" onclick="fermerModal()">✖</span>
@@ -236,7 +235,6 @@
     </div>
   </div>
 
-  <!-- Zoom overlay -->
   <div class="zoom-overlay" id="zoom-overlay" onclick="fermerZoom()">
     <img id="zoom-image" src="" alt="zoom">
   </div>
@@ -248,13 +246,17 @@
   <script>
     let tousLesArticles = [];
 
-    fetch('/articles.json')
+    fetch('./articles.json') // ← chemin relatif corrigé
       .then(res => res.json())
       .then(data => {
         tousLesArticles = data.filter(a =>
-          ['baskets', 'sneackers', 'sabots'].includes(a.categorie.toLowerCase())
+          ['baskets', 'sneakers', 'sabots'].includes(a.categorie.toLowerCase())
         );
         afficherArticles(tousLesArticles);
+      })
+      .catch(err => {
+        document.getElementById('articles-list').innerHTML = "<p>Erreur lors du chargement des articles.</p>";
+        console.error("Erreur de chargement :", err);
       });
 
     function afficherArticles(liste) {
