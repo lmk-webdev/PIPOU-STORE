@@ -11,31 +11,45 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
     form {
       background: white;
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      width: 300px;
     }
     input, button {
       display: block;
       margin: 15px 0;
       padding: 10px;
       width: 100%;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    #error-message {
+      color: red;
+      font-size: 0.9rem;
+      height: 1.2em;
     }
   </style>
 </head>
 <body>
   <form id="login-form">
     <h2>Connexion Admin 🔒</h2>
-    <input type="password" id="password" placeholder="Mot de passe" required />
+    <input type="password" id="password" placeholder="Mot de passe" required autocomplete="current-password" />
+    <div id="error-message"></div>
     <button type="submit">Se connecter</button>
   </form>
 
   <script>
-    document.getElementById('login-form').onsubmit = (e) => {
+    const form = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+
+    form.onsubmit = (e) => {
       e.preventDefault();
+      errorMessage.textContent = ''; // reset erreur
       const password = document.getElementById('password').value;
 
       fetch('/login', {
@@ -47,9 +61,14 @@
       .then(res => {
         if (res.ok) {
           window.location.href = '/admin.html';
+        } else if (res.status === 401) {
+          errorMessage.textContent = "Mot de passe incorrect !";
         } else {
-          alert("Mot de passe incorrect !");
+          errorMessage.textContent = "Erreur serveur, réessaye plus tard.";
         }
+      })
+      .catch(() => {
+        errorMessage.textContent = "Erreur réseau, vérifie ta connexion.";
       });
     };
   </script>
