@@ -214,7 +214,7 @@
     <h1 class="logo"><a href="index.html">🎒 PIPOU-Store</a></h1>
     <nav>
       <ul>
-        <li><a href="vêtements.html">VÊTEMENTS</a></li>
+        <li><a href="vêtements.html">VÊtEMENTS</a></li>
         <li><a href="chaussures.html">CHAUSSURES</a></li>
         <li><a href="accessoires.html">ACCESSOIRES</a></li>
       </ul>
@@ -265,13 +265,17 @@
   <script>
     let tousLesArticles = [];
 
-    fetch('/articles.json')
+    fetch('./articles.json')
       .then(res => res.json())
       .then(data => {
         tousLesArticles = data.filter(a =>
           ['couvre-chef', 'sacoches', 'ceintures', 'porte-feuille','divers'].includes(a.categorie.toLowerCase())
         );
         afficherArticles(tousLesArticles);
+      })
+      .catch(err => {
+        document.getElementById('articles-list').innerHTML = '<p>Erreur de chargement des articles.</p>';
+        console.error(err);
       });
 
     function afficherArticles(liste) {
@@ -297,7 +301,6 @@
       document.getElementById('modal-description').textContent = article.description;
       document.getElementById('modal-categorie').textContent = article.categorie;
       document.getElementById('modal-prix').textContent = article.prix;
-
 
       const tailles = article.tailles || [];
       const container = document.getElementById('modal-tailles');
