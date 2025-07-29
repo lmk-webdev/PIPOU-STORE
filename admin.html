@@ -63,6 +63,7 @@
       margin-bottom: 20px;
       border: 1px solid #ccc;
       border-radius: 6px;
+      box-sizing: border-box;
     }
     form button {
       background: #111;
@@ -105,10 +106,12 @@
     .taille-bouton input {
       display: none;
     }
-    .taille-bouton input:checked + span,
-    .taille-bouton input:checked {
+    .taille-bouton input:checked + span {
       background-color: #222;
       color: white;
+      border-radius: 20px;
+      padding: 10px 16px;
+      display: inline-block;
     }
 
     #openSidebarBtn {
@@ -134,6 +137,7 @@
       padding: 20px;
       transition: left 0.3s ease;
       z-index: 1000;
+      overflow-y: auto;
     }
     #sidebar.active {
       left: 0;
@@ -161,6 +165,32 @@
       flex: 1 1 250px;
       max-width: 250px;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .article img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .article button {
+      margin: 5px 5px 0 0;
+      background: #111;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      flex-grow: 0;
+    }
+    .article-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
     }
   </style>
 </head>
@@ -226,7 +256,7 @@
   <button id="fond-gris">Gris clair</button>
   <hr>
   <p><strong>Image personnalisée :</strong></p>
-  <input type="file" id="fond-file" accept="image/*">
+  <input type="file" id="fond-file" accept="image/*" />
   <button id="upload-fond">Envoyer l'image</button>
 </div>
 <button id="logout-btn">Déconnexion</button>
@@ -237,8 +267,6 @@ fetch('/check-session', { credentials: 'include' })
   .then(res => {
     if (!res.ok) window.location.href = '/login.html';
   });
-
-// JavaScript principal ici (inchangé, tu peux coller celui que tu avais déjà)
 
 const toutesTaillesChaussures = [38, 39, 40, 41, 42, 43, 44, 45];
 const toutesTaillesVetements = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -288,19 +316,41 @@ function afficherArticles() {
     .then(res => res.json())
     .then(data => {
       articles = data;
-      // Inverse l'ordre pour afficher le dernier article en premier
-      liste.innerHTML = articles.slice().reverse().map((a, i) => `
-        <div class="article">
-          <img src="${a.image}" alt="${a.nom}" style="max-width:100%;height:auto;">
+      liste.innerHTML = '';
+
+      // On affiche en ordre inverse (dernier ajouté en premier)
+      articles.slice().reverse().forEach((a, i) => {
+        const articleIndex = articles.length - 1 - i;
+        const div = document.createElement('div');
+        div.classList.add('article');
+        div.innerHTML = `
           <h3>${a.nom}</h3>
-          <p><strong>${a.prix} €</strong></p>
-          <p>${a.description}</p>
-          <p>Catégorie : ${a.categorie}</p>
-          <p>${a.tailles ? `Tailles : ${a.tailles.join(', ')}` : ''}</p>
-          <button onclick="modifierArticle(${articles.length - 1 - i})">✏️ Modifier</button>
-          <button onclick="supprimerArticle(${articles.length - 1 - i})">❌ Supprimer</button>
-        </div>
-      `).join('');
+          <p><strong>Prix :</strong> ${a.prix} €</p>
+          <p><strong>Description :</strong> ${a.description}</p>
+          ${a.image ? `<img src="${a.image}" alt="${a.nom}">` : ''}
+          <p><strong>Catégorie :</strong> ${a.categorie}</p>
+          <p><strong>Tailles :</strong> ${a.tailles ? a.tailles.join(', ') : 'Aucune'}</p>
+          <div class="article-buttons">
+            <button class="modifier-btn" data-index="${articleIndex}">✏️ Modifier</button>
+            <button class="supprimer-btn" data-index="${articleIndex}">❌ Supprimer</button>
+          </div>
+        `;
+        liste.appendChild(div);
+      });
+
+      // Ajout des event listeners pour les boutons modifier et supprimer
+      document.querySelectorAll('.modifier-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const idx = +e.currentTarget.dataset.index;
+          modifierArticle(idx);
+        });
+      });
+      document.querySelectorAll('.supprimer-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const idx = +e.currentTarget.dataset.index;
+          supprimerArticle(idx);
+        });
+      });
     });
 }
 
@@ -309,22 +359,29 @@ function modifierArticle(index) {
   const a = articles[index];
   toggleSection('ajout');
   document.getElementById('form-title').textContent = 'Modifier un article';
-  form.nom.value = a.nom;
-  form.prix.value = a.prix;
-  form.description.value = a.description;
-  form.categorie.value = a.categorie;
+  form.nom.value = a.nom || '';
+  form.prix.value = a.prix || '';
+  form.description.value = a.description || '';
+  form.categorie.value = a.categorie || '';
   afficherTaillesSiBesoin();
 
-  // cocher les tailles existantes
-  const checkboxes = taillesOptions.querySelectorAll('input[type="checkbox"]');
-  checkboxes.forEach(cb => cb.checked = a.tailles?.includes(cb.value));
+  // On coche les tailles
+  const inputs = taillesOptions.querySelectorAll('input[type=checkbox]');
+  inputs.forEach(i => {
+    i.checked = a.tailles && a.tailles.includes(i.value);
+  });
+
+  // Image n'est pas modifiable ici (à simplifier si besoin)
 }
 
 function supprimerArticle(index) {
-  if (!confirm('Confirmer la suppression ?')) return;
-  fetch(`/articles/${articles[index].id}`, {
-    method: 'DELETE',
-    credentials: 'include',
+  if (!confirm('Voulez-vous vraiment supprimer cet article ?')) return;
+  articles.splice(index, 1);
+  fetch('/save-articles', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(articles),
+    credentials: 'include'
   })
   .then(res => {
     if (res.ok) {
@@ -343,106 +400,124 @@ form.addEventListener('submit', e => {
   const prix = parseFloat(form.prix.value);
   const description = form.description.value.trim();
   const categorie = form.categorie.value;
-  const tailles = Array.from(taillesOptions.querySelectorAll('input[type="checkbox"]:checked'))
-                      .map(cb => cb.value);
+  const tailles = Array.from(taillesOptions.querySelectorAll('input[type=checkbox]:checked'))
+                      .map(i => i.value);
 
-  if (!nom || isNaN(prix) || !categorie) {
-    alert('Veuillez remplir les champs obligatoires');
+  if (!nom || !prix || !categorie) {
+    alert('Merci de remplir les champs obligatoires');
     return;
   }
 
-  const formData = new FormData();
-  formData.append('nom', nom);
-  formData.append('prix', prix);
-  formData.append('description', description);
-  formData.append('categorie', categorie);
-  tailles.forEach(t => formData.append('tailles[]', t));
+  // On va gérer l'image
+  const fileInput = form.image;
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function() {
+      enregistrerArticle(nom, prix, description, categorie, tailles, reader.result);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // Pas de nouvelle image, on garde l'ancienne si on modifie
+    let image = '';
+    if (editingIndex !== null && articles[editingIndex]) {
+      image = articles[editingIndex].image || '';
+    }
+    enregistrerArticle(nom, prix, description, categorie, tailles, image);
+  }
+});
 
-  const imageFile = form.image.files[0];
-  if (imageFile) formData.append('image', imageFile);
-
-  let url = '/articles';
-  let method = 'POST';
+function enregistrerArticle(nom, prix, description, categorie, tailles, image) {
+  const article = { nom, prix, description, categorie, tailles, image };
   if (editingIndex !== null) {
-    url = `/articles/${articles[editingIndex].id}`;
-    method = 'PUT';
+    articles[editingIndex] = article;
+  } else {
+    articles.push(article);
   }
 
-  fetch(url, {
-    method,
-    credentials: 'include',
-    body: formData
+  fetch('/save-articles', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(articles),
+    credentials: 'include'
   })
   .then(res => {
     if (res.ok) {
-      alert(editingIndex === null ? 'Article ajouté' : 'Article modifié');
-      form.reset();
+      alert(editingIndex !== null ? 'Article modifié' : 'Article ajouté');
       editingIndex = null;
+      form.reset();
+      taillesContainer.style.display = 'none';
       toggleSection('liste');
       afficherArticles();
     } else {
-      alert('Erreur lors de l’enregistrement');
+      alert('Erreur lors de la sauvegarde');
     }
   });
-});
+}
 
-function genererDescriptionIA() {
+// Génération description IA (exemple simple)
+document.getElementById('btn-description').addEventListener('click', () => {
   const nom = form.nom.value.trim();
   if (!nom) {
-    alert('Entrez d’abord un nom de produit');
+    alert('Merci de saisir le nom du produit avant');
     return;
   }
-  fetch(`/generate-description?nom=${encodeURIComponent(nom)}`, { credentials: 'include' })
-    .then(res => res.json())
-    .then(data => {
-      form.description.value = data.description || 'Pas de description générée';
-    });
-}
+  document.getElementById('btn-description').disabled = true;
+  document.getElementById('btn-description').textContent = 'Génération en cours...';
 
-function envoyerFond(couleur) {
-  fetch('/fond', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ couleur })
-  })
-  .then(res => {
-    if (res.ok) {
-      document.body.style.background = couleur;
-      alert('Fond changé !');
-    }
-  });
-}
-
-document.getElementById('openSidebarBtn').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('active');
+  // Simuler appel API
+  setTimeout(() => {
+    form.description.value = `Description automatique détaillée pour ${nom}. C'est un produit exceptionnel de haute qualité.`;
+    document.getElementById('btn-description').disabled = false;
+    document.getElementById('btn-description').textContent = '✨ Générer une description automatique (détaillée)';
+  }, 2000);
 });
 
-function uploadFond() {
+document.getElementById('btn-ajout').addEventListener('click', () => {
+  editingIndex = null;
+  form.reset();
+  taillesContainer.style.display = 'none';
+  document.getElementById('form-title').textContent = 'Ajouter un article';
+  toggleSection('ajout');
+});
+
+document.getElementById('btn-liste').addEventListener('click', () => {
+  toggleSection('liste');
+  afficherArticles();
+});
+
+// Sidebar fond
+const sidebar = document.getElementById('sidebar');
+document.getElementById('openSidebarBtn').addEventListener('click', () => {
+  sidebar.classList.toggle('active');
+});
+
+document.getElementById('fond-blanc').addEventListener('click', () => {
+  document.body.style.background = '#fff';
+});
+document.getElementById('fond-noir').addEventListener('click', () => {
+  document.body.style.background = '#111';
+});
+document.getElementById('fond-gris').addEventListener('click', () => {
+  document.body.style.background = '#eee';
+});
+
+document.getElementById('upload-fond').addEventListener('click', () => {
   const fileInput = document.getElementById('fond-file');
-  const file = fileInput.files[0];
-  if (!file) {
-    alert('Choisissez un fichier');
+  if (fileInput.files.length === 0) {
+    alert('Veuillez sélectionner une image');
     return;
   }
-  const fd = new FormData();
-  fd.append('fond', file);
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.body.style.background = `url(${reader.result}) no-repeat center center fixed`;
+    document.body.style.backgroundSize = 'cover';
+  };
+  reader.readAsDataURL(file);
+});
 
-  fetch('/upload-fond', {
-    method: 'POST',
-    credentials: 'include',
-    body: fd
-  })
-  .then(res => {
-    if (res.ok) {
-      alert('Fond personnalisé envoyé !');
-      fileInput.value = '';
-    } else {
-      alert('Erreur lors de l’envoi');
-    }
-  });
-}
-
+// Logout
 document.getElementById('logout-btn').addEventListener('click', () => {
   fetch('/logout', { method: 'POST', credentials: 'include' })
     .then(res => {
@@ -450,27 +525,9 @@ document.getElementById('logout-btn').addEventListener('click', () => {
     });
 });
 
-// Au chargement, afficher la liste des articles
+// Initial load
 afficherArticles();
-toggleSection('liste');
-
-// Ajouter les event listeners manquants (sans onclick inline)
-document.getElementById('btn-ajout').addEventListener('click', () => toggleSection('ajout'));
-document.getElementById('btn-liste').addEventListener('click', () => toggleSection('liste'));
-document.getElementById('btn-description').addEventListener('click', genererDescriptionIA);
-document.getElementById('fond-blanc').addEventListener('click', () => envoyerFond('#ffffff'));
-document.getElementById('fond-noir').addEventListener('click', () => envoyerFond('#111111'));
-document.getElementById('fond-gris').addEventListener('click', () => envoyerFond('#f2f2f2'));
-document.getElementById('upload-fond').addEventListener('click', uploadFond);
-document.getElementById('openSidebarBtn').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('active');
-});
-document.getElementById('logout-btn').addEventListener('click', () => {
-  fetch('/logout', { method: 'POST', credentials: 'include' })
-    .then(res => {
-      if (res.ok) window.location.href = '/login.html';
-    });
-});
+toggleSection('welcome');
 </script>
 
 </body>
