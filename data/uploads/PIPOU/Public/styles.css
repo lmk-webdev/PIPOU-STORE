@@ -1,0 +1,67 @@
+
+body {
+
+  background:url(file:///C:/Users/Profil/Desktop/PIPOU/Public/images/japan3.png) no-repeat;
+  background-size: 100%;
+ ;
+}
+
+header {
+  background-color: #8ec0d5;
+  border-radius: 30px 30px 30px 30px; /* arrondis en bas à gauche & droite */
+}
+
+h1.logo {
+  font-size:65px ;
+  margin-left: 665px;
+}
+
+h1.logo a{
+  text-decoration: none;
+        color: #cce9fa;
+}
+
+h1.logo:hover a{
+   color: #fff
+}
+
+  /*menu navigation*/
+
+nav.menu-nav ul li{
+ list-style-type: none;
+  display: inline-block;
+}
+
+
+nav.menu-nav ul li a{
+  color: #fff;
+     background-color: black ;
+      text-decoration: none;
+        font-size: 45px;
+        border-radius: 15px 15px 15px 15px; 
+        border: 2px solid white;
+}
+
+nav.menu-nav ul li:hover a{
+    color: #cce9fa;
+      background-color: #fff;
+       border: 2px solid #cce9fa;
+        transition: 0.45s all;
+}
+
+  /* barre latérale */
+aside.sidebar{
+  background-color: #cce9fa;
+      display: inline-block;
+  display: flex;
+  align-items: center;    /* verticalement centré */
+  gap: 10px;
+  margin-inline: 10px;
+  flex-wrap: wrap; /* permet le retour à la ligne si petit écran */
+}
+
+/*MENU ADMIN*/
+
+main.admin{
+  background-color: #cce9fa;
+}

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PIPOU Store - Accueil</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background-color: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(5px);
+    }
+
+    .logo {
+      font-size: 2em;
+      font-weight: bold;
+      color: #222;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 1.2em;
+      color: #333;
+      padding: 12px 20px;
+      border-radius: 25px;
+      background-color: #f0f0f0;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .nav-links a:hover {
+      background-color: #222;
+      color: #fff;
+      transform: translateY(-3px);
+    }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px;
+      text-align: center;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .hero h1 {
+      font-size: 3em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      font-size: 1.2em;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #111;
+      color: #eee;
+    }
+
+    @media screen and (max-width: 600px) {
+      .nav-links {
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
+
+    #article-vedette {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    #article-vedette > div {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 450px;
+      width: 100%;
+      text-align: center;
+    }
+
+    #article-vedette img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    #articles-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .article {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      width: 220px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .article:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .article img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .article h3 {
+      margin: 10px 0 5px 0;
+      font-size: 1.1em;
+      color: #222;
+    }
+
+    .article p {
+      margin: 0;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup-content {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .popup-content span.taille-option {
+      display: inline-block;
+      margin: 4px;
+      padding: 8px 12px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+      font-size: 0.95em;
+      cursor: default;
+      user-select: none;
+    }
+
+    .popup-content span.taille-option.indisponible {
+      text-decoration: line-through;
+      color: #aaa;
+      border-color: #ddd;
+      background-color: #f3f3f3;
+    }
+
+    .popup-close {
+      margin-top: 15px;
+      cursor: pointer;
+      background: #111;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="client.html" class="logo">🧥 PIPOU-Store</a>
+    <nav class="nav-links">
+      <a href="vêtements.html">VÊTEMENTS</a>
+      <a href="chaussures.html">CHAUSSURES</a>
+      <a href="accessoires.html">ACCESSOIRES</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Bienvenue sur PIPOU-Store</h1>
+      <p>Découvrez nos dernières collections de vêtements, chaussures et accessoires tendance.</p>
+    </div>
+  </div>
+
+  <main>
+    <section id="article-vedette"></section>
+    <section id="articles-container"></section>
+  </main>
+
+  <footer>
+    <p>&copy; WENLMK 2025 - 2026 - Tous droits réservés</p>
+  </footer>
+
+  <!-- Popup article -->
+  <div class="popup-overlay" id="popup">
+    <div class="popup-content" id="popup-content"></div>
+  </div>
+
+  <!-- Script principal sécurisé -->
+  <script>
+    fetch('/articles.json')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.length) {
+          document.getElementById("articles-container").innerHTML = "<p>Aucun article pour le moment.</p>";
+          return;
+        }
+
+        const derniersArticles = data.slice(-2).reverse();
+        const autresArticles = data.slice(-7, -2).reverse();
+
+        const vedette = document.getElementById('article-vedette');
+        vedette.innerHTML = derniersArticles.map(article => `
+          <div>
+            <img src="${article.image}" alt="${article.nom}" />
+            <h2>${article.nom}</h2>
+            <p><strong>${article.prix} €</strong></p>
+            <p>${article.description || ''}</p>
+          </div>
+        `).join('');
+
+        afficherArticles(autresArticles);
+      });
+
+    function afficherArticles(liste) {
+      const container = document.getElementById('articles-container');
+      container.innerHTML = liste.map(article => {
+        let toutesTailles = [];
+
+        if (article.categorie === 'chaussures') {
+          toutesTailles = [38, 39, 40, 41, 42, 43, 44, 45, 46];
+        } else if (article.categorie === 'vêtements') {
+          toutesTailles = ['XS', 'S', 'M', 'L', 'XL'];
+        }
+
+        const taillesHTML = toutesTailles.map(taille => {
+          const dispo = article.tailles.map(String).includes(String(taille));
+          return `<span style="${dispo ? '' : 'text-decoration:line-through; color:gray;'}">${taille}</span>`;
+        }).join('');
+
+        return `
+          <div class="article" data-article='${JSON.stringify(article).replace(/'/g, "&apos;")}'>
+            <img src="${article.image}" alt="${article.nom}">
+            <h3>${article.nom}</h3>
+            <p>${article.prix} €</p>
+            ${taillesHTML ? `<p><strong>Tailles :</strong><br>${taillesHTML}</p>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.article').forEach(el => {
+        const data = el.getAttribute('data-article');
+        if (data) {
+          const article = JSON.parse(data.replace(/&apos;/g, "'"));
+          el.addEventListener('click', () => afficherPopup(article));
+        }
+      });
+    }
+
+    function afficherPopup(article) {
+      const popup = document.getElementById('popup');
+      const content = document.getElementById('popup-content');
+
+      let toutesTailles = [];
+      if (['sabots', 'sneakers', 'baskets'].includes(article.categorie)) {
+        toutesTailles = [38, 39, 40, 41, 42, 43, 44, 45, 46];
+      } else if (['maillots', 'vêtements'].includes(article.categorie)) {
+        toutesTailles = ['XS', 'S', 'M', 'L', 'XL'];
+      }
+
+      const taillesHTML = toutesTailles.map(taille => {
+        const dispo = article.tailles?.map(String).includes(String(taille));
+        return `<span class="taille-option ${dispo ? '' : 'indisponible'}">${taille}</span>`;
+      }).join('');
+
+      content.innerHTML = `
+        <img src="${article.image}" alt="${article.nom}">
+        <h2>${article.nom}</h2>
+        <p>${article.description}</p>
+        <p><strong>${article.prix} €</strong></p>
+        ${taillesHTML ? `<p><strong>Tailles disponibles :</strong><br>${taillesHTML}</p>` : ''}
+        <button class="popup-close" id="fermer-btn">Fermer</button>
+      `;
+
+      popup.style.display = 'flex';
+
+      document.getElementById("fermer-btn").addEventListener("click", fermerPopup);
+    }
+
+    function fermerPopup() {
+      document.getElementById('popup').style.display = 'none';
+    }
+  </script>
+
+  <!-- Fond d’écran -->
+  <script>
+    fetch('/backgroundwlp.json')
+      .then(res => res.json())
+      .then(data => {
+        const bg = data['client'];
+        if (bg && bg.type === 'image' && bg.value !== 'OK') {
+          document.body.style.backgroundImage = `url(${bg.value})`;
+        }
+      })
+      .catch(err => console.error("Erreur de fond d'écran :", err));
+
+    fetch('/fond')
+      .then(res => res.json())
+      .then(data => {
+        const fond = data.background;
+        document.body.style.background = fond;
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundRepeat = "no-repeat";
+      });
+  </script>
+</body>
+</html>

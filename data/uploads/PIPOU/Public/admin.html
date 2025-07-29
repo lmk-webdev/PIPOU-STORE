@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - PIPOU Store</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #111;
+      color: white;
+      padding: 30px;
+      text-align: center;
+      font-size: 1.5em;
+    }
+    #welcome {
+      text-align: center;
+      padding: 60px 20px;
+      font-size: 1.8em;
+      color: #444;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .controls button {
+      padding: 12px 20px;
+      background: #222;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background: #444;
+    }
+    section {
+      display: none;
+      max-width: 800px;
+      margin: auto;
+    }
+    section.active {
+      display: block;
+    }
+    form, .article {
+      background: white;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    form input, form select, form textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    form button {
+      background: #111;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .article img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .article button {
+      margin-right: 10px;
+    }
+    .delete-btn {
+      background: crimson;
+    }
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 250px;
+      height: 100%;
+      background: #222;
+      color: white;
+      padding: 20px;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+    #sidebar.active {
+      transform: translateX(0);
+    }
+    #sidebar button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #444;
+      border: none;
+      color: white;
+      border-radius: 5px;
+    }
+    #openSidebarBtn {
+      position: fixed;
+      left: 10px;
+      top: 10px;
+      z-index: 1001;
+      background: #444;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #logout-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 10px 14px;
+      background-color: crimson;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 1001;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Bienvenue sur l’administration de PIPOU-Store</header>
+  <div id="welcome">Bienvenue ! Choisis une action ci-dessous 👇</div>
+
+  <div class="controls">
+    <button onclick="toggleSection('ajout')">➕ Ajouter un article</button>
+    <button onclick="toggleSection('liste')">📦 Voir les articles</button>
+  </div>
+
+  <section id="section-ajout">
+    <form id="article-form">
+      <h2 id="form-title">Ajouter un article</h2>
+      <input type="text" id="nom" placeholder="Nom du produit" required />
+      <input type="number" id="prix" placeholder="Prix (€)" step="0.01" required />
+      <textarea id="description" placeholder="Description"></textarea>
+      <input type="file" id="image" accept="image/*" />
+      <select id="categorie" required>
+        <option value="">-- Sélectionner une catégorie --</option>
+        <option value="sacoches">sacoches</option>
+        <option value="ceintures">ceintures</option>
+        <option value="couvre-chef">couvre-chef</option>
+        <option value="porte-feuille">porte-feuille</option>
+        <option value="t-shirts">t-shirts</option>
+        <option value="maillots">maillots</option>
+        <option value="vestes/manteaux">vestes/manteaux</option>
+        <option value="pantalon">pantalon</option>
+        <option value="short">short</option>
+        <option value="basket">basket</option>
+        <option value="sabots">sabots</option>
+        <option value="sneackers">sneackers</option>
+      </select>
+      <div id="tailles-container" style="display:none;">
+        <label><strong>Tailles disponibles :</strong></label>
+        <div id="tailles-options"></div>
+      </div>
+      <button type="submit" id="submit-btn">Ajouter</button>
+    </form>
+  </section>
+
+  <section id="section-liste">
+    <h2>Articles enregistrés</h2>
+    <div id="liste-articles"></div>
+  </section>
+
+  <button id="openSidebarBtn">🎨 Fond</button>
+  <div id="sidebar">
+    <h3>Changer le fond</h3>
+    <button onclick="envoyerFond('#ffffff')">Blanc</button>
+    <button onclick="envoyerFond('#111111')">Noir</button>
+    <button onclick="envoyerFond('#f2f2f2')">Gris clair</button>
+    <hr>
+    <p><strong>Image personnalisée :</strong></p>
+    <input type="file" id="fond-file" accept="image/*">
+    <button onclick="uploadFond()">Envoyer l'image</button>
+  </div>
+
+  <button id="logout-btn">Déconnexion</button>
+
+  <script>
+    const toutesTaillesChaussures = [38, 39, 40, 41, 42, 43, 44, 45];
+    const toutesTaillesVetements = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+    const form = document.getElementById('article-form');
+    const taillesContainer = document.getElementById('tailles-container');
+    const taillesOptions = document.getElementById('tailles-options');
+    const categorieSelect = document.getElementById('categorie');
+    const liste = document.getElementById('liste-articles');
+    let editingIndex = null;
+    let articles = [];
+
+    function toggleSection(id) {
+      document.getElementById('section-ajout').classList.remove('active');
+      document.getElementById('section-liste').classList.remove('active');
+      document.getElementById('welcome').style.display = 'none';
+      if (id === 'ajout') document.getElementById('section-ajout').classList.add('active');
+      else document.getElementById('section-liste').classList.add('active');
+    }
+
+    function afficherTaillesSiBesoin() {
+      const cat = categorieSelect.value;
+      let tailles = [];
+
+      if (['sneackers', 'basket', 'sabots'].includes(cat)) tailles = toutesTaillesChaussures;
+      else if (['t-shirts', 'maillots', 'vestes/manteaux', 'pantalon', 'short'].includes(cat)) tailles = toutesTaillesVetements;
+
+      if (tailles.length) {
+        taillesContainer.style.display = "block";
+        taillesOptions.innerHTML = tailles.map(t => `
+          <label><input type="checkbox" value="${t}"> ${t}</label>
+        `).join(' ');
+      } else {
+        taillesContainer.style.display = "none";
+        taillesOptions.innerHTML = '';
+      }
+    }
+
+    categorieSelect.addEventListener('change', afficherTaillesSiBesoin);
+
+    function afficherArticles() {
+      fetch('/articles.json')
+        .then(res => res.json())
+        .then(data => {
+          articles = data;
+          liste.innerHTML = articles.map((a, i) => `
+            <div class="article">
+              <img src="${a.image}" alt="${a.nom}">
+              <h3>${a.nom}</h3>
+              <p><strong>${a.prix} €</strong></p>
+              <p>${a.description}</p>
+              <p>Catégorie : ${a.categorie}</p>
+              <p>${a.tailles?.length ? "Tailles : " + a.tailles.join(", ") : ""}</p>
+              <button onclick="modifierArticle(${i})">Modifier</button>
+              <button class="delete-btn" onclick="supprimerArticle(${i})">Supprimer</button>
+            </div>
+          `).join('');
+        });
+    }
+
+    function modifierArticle(i) {
+      const a = articles[i];
+      editingIndex = i;
+      form.nom.value = a.nom;
+      form.prix.value = a.prix;
+      form.description.value = a.description;
+      form.categorie.value = a.categorie;
+      afficherTaillesSiBesoin();
+      setTimeout(() => {
+        taillesOptions.querySelectorAll('input').forEach(input => {
+          input.checked = a.tailles?.includes(input.value) || a.tailles?.includes(Number(input.value));
+        });
+      }, 100);
+      document.getElementById('form-title').innerText = "Modifier l'article";
+      document.getElementById('submit-btn').innerText = "Mettre à jour";
+      toggleSection('ajout');
+    }
+
+    function supprimerArticle(index) {
+      if (confirm("Supprimer cet article ?")) {
+        fetch(`/articles/${index}`, { method: 'DELETE' }).then(afficherArticles);
+      }
+    }
+
+    form.onsubmit = e => {
+      e.preventDefault();
+      const nom = form.nom.value;
+      const prix = parseFloat(form.prix.value);
+      const description = form.description.value;
+      const categorie = form.categorie.value;
+      const tailles = [...taillesOptions.querySelectorAll('input:checked')].map(t => t.value);
+      const file = form.image.files[0];
+
+      const traiter = (imageBase64) => {
+        const article = { nom, prix, description, image: imageBase64, categorie, tailles };
+
+        if (editingIndex !== null) {
+          fetch(`/articles/${editingIndex}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(article)
+          }).then(() => {
+            editingIndex = null;
+            form.reset();
+            afficherArticles();
+          });
+        } else {
+          fetch('/articles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(article)
+          }).then(() => {
+            form.reset();
+            afficherArticles();
+          });
+        }
+
+        document.getElementById('form-title').innerText = "Ajouter un article";
+        document.getElementById('submit-btn').innerText = "Ajouter";
+      };
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => traiter(e.target.result);
+        reader.readAsDataURL(file);
+      } else {
+        const img = editingIndex !== null ? articles[editingIndex].image : "";
+        traiter(img);
+      }
+    };
+
+    window.onload = () => {
+      afficherArticles();
+      afficherTaillesSiBesoin();
+    };
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      fetch('/logout').then(() => window.location.href = '/login.html');
+    });
+
+    document.getElementById('openSidebarBtn').onclick = () => {
+      document.getElementById('sidebar').classList.toggle('active');
+    };
+
+    function envoyerFond(fond) {
+      fetch('/fond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ background: fond })
+      }).then(() => {
+        alert("Fond modifié !");
+        document.getElementById('sidebar').classList.remove('active');
+      });
+    }
+
+    function uploadFond() {
+      const file = document.getElementById('fond-file').files[0];
+      if (!file) return alert("Choisis une image !");
+      const formData = new FormData();
+      formData.append('fond', file);
+      fetch('/upload-fond', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(() => {
+          alert("Image de fond modifiée !");
+          document.getElementById('sidebar').classList.remove('active');
+        });
+    }
+  </script>
+
+</body>
+</html>
