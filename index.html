@@ -6,7 +6,7 @@
   <title>PIPOU Store - Accueil</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
-      body {
+     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background-size: cover;
@@ -250,7 +250,7 @@
 
   <!-- Script principal -->
   <script>
-    fetch('articles.json')  // 👈 Corrigé ici
+    fetch('articles.json')
       .then(res => res.json())
       .then(data => {
         if (!data.length) {
@@ -335,7 +335,6 @@
       `;
 
       popup.style.display = 'flex';
-
       document.getElementById("fermer-btn").addEventListener("click", fermerPopup);
     }
 
@@ -346,7 +345,7 @@
 
   <!-- Fond d’écran -->
   <script>
-    fetch('backgroundwlp.json') // 👈 Corrigé ici
+    fetch('backgroundwlp.json')
       .then(res => res.json())
       .then(data => {
         const bg = data['client'];
@@ -356,7 +355,7 @@
       })
       .catch(err => console.error("Erreur de fond d'écran :", err));
 
-    fetch('fond') // 👈 Corrigé ici
+    fetch('fond.json')  // ✅ corrigé ici
       .then(res => res.json())
       .then(data => {
         const fond = data.background;
