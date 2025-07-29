@@ -6,6 +6,7 @@
   <title>VÊTEMENTS – PIPOU Store</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    /* === STYLES CSS INCHANGÉS === */
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
@@ -269,13 +270,15 @@
   <script>
     let tousLesArticles = [];
 
-    fetch('/articles.json')
+    fetch('./articles.json') // Chemin corrigé
       .then(res => res.json())
       .then(data => {
         tousLesArticles = data.filter(a =>
           ['t-shirts', 'maillots', 'vestes/manteaux', 'pantalon', 'short','sweat','sweat-à-capuche','pull','chemise'].includes(a.categorie.toLowerCase())
         );
         afficherArticles(tousLesArticles);
+      }).catch(err => {
+        console.error("Erreur de chargement des articles :", err);
       });
 
     function afficherArticles(liste) {
@@ -337,21 +340,18 @@
       document.getElementById('article-modal').style.display = 'none';
     }
 
-    // Fermer modale en cliquant en dehors
     document.getElementById('article-modal').addEventListener('click', (e) => {
       if (e.target.id === 'article-modal') {
         fermerModal();
       }
     });
 
-    // Zoom image
     document.getElementById('modal-image').addEventListener('click', () => {
       const src = document.getElementById('modal-image').src;
       document.getElementById('zoomed-image').src = src;
       document.getElementById('image-zoom').style.display = 'flex';
     });
 
-    // Fermer zoom image
     document.getElementById('image-zoom').addEventListener('click', () => {
       document.getElementById('image-zoom').style.display = 'none';
     });
