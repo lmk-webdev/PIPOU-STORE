@@ -166,25 +166,6 @@
       font-size: 18px;
     }
 
-    .taille-button {
-      margin: 5px;
-      padding: 8px 12px;
-      border: 1px solid #000;
-      border-radius: 5px;
-      cursor: pointer;
-      background: white;
-    }
-
-    .taille-button:hover {
-      background: #111;
-      color: #fff;
-    }
-
-    .taille-button.selected {
-      background: #000;
-      color: #fff;
-    }
-
     /* Zoom modal */
     .zoom-modal {
       display: none;
@@ -300,24 +281,6 @@
       document.getElementById('modal-description').textContent = article.description;
       document.getElementById('modal-categorie').textContent = article.categorie;
       document.getElementById('modal-prix').textContent = article.prix;
-
-      const tailles = article.tailles || [];
-      const container = document.getElementById('modal-tailles');
-      container.innerHTML = "<p><strong>Tailles :</strong></p>";
-
-      if (tailles.length > 0) {
-        tailles.forEach(taille => {
-          const btn = document.createElement("button");
-          btn.className = "taille-button";
-          btn.textContent = taille;
-          btn.onclick = () => {
-            document.querySelectorAll('.taille-button').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-          };
-          container.appendChild(btn);
-        });
-  
-
       document.getElementById('article-modal').style.display = 'flex';
     }
 
