@@ -354,6 +354,38 @@
     document.getElementById('image-zoom').addEventListener('click', () => {
       document.getElementById('image-zoom').style.display = 'none';
     });
+
+
+        function afficherPopup(article) {
+      const popup = document.getElementById('popup');
+      const content = document.getElementById('popup-content');
+
+      let toutesTailles = [];
+      if (['maillots', 'vêtements'].includes(article.categorie)) {
+        toutesTailles = ['XS', 'S', 'M', 'L', 'XL'];
+      }
+
+      const taillesHTML = toutesTailles.map(taille => {
+        const dispo = article.tailles?.map(String).includes(String(taille));
+        return `<span class="taille-option ${dispo ? '' : 'indisponible'}">${taille}</span>`;
+      }).join('');
+
+      content.innerHTML = `
+        <img src="${article.image}" alt="${article.nom}">
+        <h2>${article.nom}</h2>
+        <p>${article.description}</p>
+        <p><strong>${article.prix} €</strong></p>
+        ${taillesHTML ? `<p><strong>Tailles disponibles :</strong><br>${taillesHTML}</p>` : ''}
+        <button class="popup-close" id="fermer-btn">Fermer</button>
+      `;
+
+      popup.style.display = 'flex';
+      document.getElementById("fermer-btn").addEventListener("click", fermerPopup);
+    }
+
+    function fermerPopup() {
+      document.getElementById('popup').style.display = 'none';
+    }
   </script>
 </body>
 </html>
