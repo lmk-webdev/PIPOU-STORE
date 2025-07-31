@@ -214,7 +214,7 @@
         <option value="">Toutes</option>
         <option value="baskets">baskets</option>
         <option value="sabots">sabots</option>
-        <option value="sneakers">sneakers</option>
+        <option value="sneackers">sneackers</option>
       </select>
       <button onclick="filtrerArticles()">Appliquer</button>
     </div>
@@ -250,7 +250,7 @@
       .then(res => res.json())
       .then(data => {
         tousLesArticles = data.filter(a =>
-          ['baskets', 'sneakers', 'sabots'].includes(a.categorie.toLowerCase())
+          ['baskets', 'sneackers', 'sabots'].includes(a.categorie.toLowerCase())
         );
         afficherArticles(tousLesArticles);
       })
