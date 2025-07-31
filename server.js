@@ -293,6 +293,12 @@ app.get('/check-session', (req, res) => {
   }
 });
 
+const path = require('path');
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+
 // Démarrer serveur
 app.listen(PORT, () => {
   console.log(`✅ Serveur en ligne : http://localhost:${PORT}`);
