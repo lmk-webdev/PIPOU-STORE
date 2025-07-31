@@ -1,5 +1,5 @@
 const express = require('express');
-const fs = require('fs').promises; // utiliser la version promise de fs
+const fs = require('fs').promises;
 const path = require('path');
 const multer = require('multer');
 const session = require('express-session');
@@ -21,6 +21,31 @@ if (!ADMIN_PASSWORD || !SESSION_SECRET) {
   process.exit(1);
 }
 
+// Redis setup for session store
+const RedisStore = require('connect-redis')(session);
+const { createClient } = require('redis');
+const redisClient = createClient({
+  url: process.env.REDIS_URL,
+});
+
+redisClient.connect().catch(console.error);
+
+// Middleware session unique avec Redis
+app.use(
+  session({
+    store: new RedisStore({ client: redisClient }),
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false, // mettre true en prod avec HTTPS
+      sameSite: 'lax',
+      maxAge: 1000 * 60 * 60 * 2, // 2h
+    },
+  })
+);
+
 // Sécurité HTTP headers (CSP adapté)
 app.use(
   helmet({
@@ -37,21 +62,6 @@ app.use(
 // Body parser
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Sessions sécurisées
-app.use(
-  session({
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false, // à mettre true si HTTPS en prod
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 2, // 2h
-    },
-  })
-);
 
 // Rate limiter login
 const loginLimiter = rateLimit({
@@ -296,7 +306,6 @@ app.get('/check-session', (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-
 
 // Démarrer serveur
 app.listen(PORT, () => {
