@@ -20,7 +20,7 @@ if (!ADMIN_PASSWORD || !SESSION_SECRET) {
 }
 
 // Redis setup for session store
-const RedisStore = require('connect-redis')(session); // <-- correction ici
+const RedisStore = require('connect-redis').default; // <-- correction ici
 const { createClient } = require('redis');
 const redisClient = createClient({
   url: process.env.REDIS_URL,
