@@ -10,8 +10,6 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ARTICLES_FILE = path.join(__dirname, 'articles.json');
-const FOND_FILE = path.join(__dirname, 'fond.json');
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -70,7 +68,7 @@ const loginLimiter = rateLimit({
   message: "Trop de tentatives. Réessaie dans 15 minutes.",
 });
 
-// Création dossier fonds si absent
+// Dossier pour les fonds
 const fondsPath = path.join(__dirname, 'public/fonds');
 const ensureDirExists = async (dir) => {
   try {
@@ -81,10 +79,10 @@ const ensureDirExists = async (dir) => {
 };
 ensureDirExists(fondsPath);
 
-// Multer configuration upload image (limite taille + filtre mime)
+// Multer configuration upload image
 const upload = multer({
   dest: fondsPath,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+  limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (
       file.mimetype === 'image/jpeg' ||
@@ -112,12 +110,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Fichiers statiques
+// Fichiers statiques (HTML, CSS, JSON, images...)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- ROUTES ---
 
-// Login avec validation
+// Login
 app.post('/login', loginLimiter, async (req, res) => {
   try {
     const { password } = req.body;
@@ -140,19 +138,9 @@ app.post('/logout', (req, res) => {
   });
 });
 
-// Lire articles
-app.get('/articles.json', requireLogin, async (req, res) => {
-  try {
-    const data = await fs.readFile(ARTICLES_FILE, 'utf-8');
-    const articles = JSON.parse(data || '[]');
-    res.json(articles);
-  } catch (err) {
-    console.error('Erreur lecture articles:', err);
-    res.status(500).json({ error: 'Erreur lecture articles' });
-  }
-});
+// Ajouter article
+const ARTICLES_FILE = path.join(__dirname, 'public/articles.json');
 
-// Ajouter article avec validation
 app.post(
   '/articles',
   requireLogin,
@@ -186,7 +174,7 @@ app.post(
   }
 );
 
-// Modifier article avec validation
+// Modifier article
 app.put(
   '/articles/:id',
   requireLogin,
@@ -247,18 +235,9 @@ app.delete('/articles/:id', requireLogin, async (req, res) => {
   }
 });
 
-// Lire fond
-app.get('/fond', requireLogin, async (req, res) => {
-  try {
-    const data = await fs.readFile(FOND_FILE, 'utf-8');
-    const fond = JSON.parse(data);
-    res.json(fond);
-  } catch {
-    res.json({ background: '#f2f2f2' });
-  }
-});
+// Lire et modifier fond
+const FOND_FILE = path.join(__dirname, 'public/fond.json');
 
-// Changer fond
 app.post('/fond', requireLogin, async (req, res) => {
   try {
     await fs.writeFile(FOND_FILE, JSON.stringify(req.body, null, 2));
@@ -269,12 +248,11 @@ app.post('/fond', requireLogin, async (req, res) => {
   }
 });
 
-// Upload image fond
+// Upload image de fond
 app.post('/upload-fond', requireLogin, upload.single('fond'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Fichier manquant' });
-    }
+    if (!req.file) return res.status(400).json({ error: 'Fichier manquant' });
+
     const imagePath = `/fonds/${req.file.filename}`;
     await fs.writeFile(FOND_FILE, JSON.stringify({ background: `url(${imagePath})` }, null, 2));
     res.json({ message: 'Fond uploadé', path: imagePath });
@@ -284,7 +262,7 @@ app.post('/upload-fond', requireLogin, upload.single('fond'), async (req, res) =
   }
 });
 
-// Génération description simple
+// Génération description automatique
 app.get('/generate-description', requireLogin, (req, res) => {
   const { nom } = req.query;
   if (!nom || typeof nom !== 'string') {
@@ -303,6 +281,7 @@ app.get('/check-session', (req, res) => {
   }
 });
 
+// Accueil
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
