@@ -22,27 +22,32 @@ if (!ADMIN_PASSWORD || !SESSION_SECRET) {
 // Redis setup for session store
 const RedisStore = require('connect-redis').default; // <-- correction ici
 const { createClient } = require('redis');
+
 const redisClient = createClient({
   url: process.env.REDIS_URL,
 });
-
 redisClient.connect().catch(console.error);
 
-// Middleware session unique avec Redis
+const redisStore = new RedisStore({
+  client: redisClient,
+  prefix: "sess:",  // optionnel, pour préfixer les clés dans Redis
+});
+
 app.use(
   session({
-    store: new RedisStore({ client: redisClient }),
+    store: redisStore,
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // mettre true en prod avec HTTPS
+      secure: false, // true en prod avec HTTPS
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 2, // 2h
+      maxAge: 1000 * 60 * 60 * 2,
     },
   })
 );
+
 
 // Sécurité HTTP headers (CSP adapté)
 app.use(
