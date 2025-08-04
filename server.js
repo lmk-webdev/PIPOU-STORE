@@ -69,7 +69,7 @@ const loginLimiter = rateLimit({
 });
 
 // Dossier pour les fonds
-const fondsPath = path.join(__dirname, 'public/fonds');
+const fondsPath = path.join(__dirname, 'fonds');
 const ensureDirExists = async (dir) => {
   try {
     await fs.access(dir);
@@ -111,7 +111,7 @@ app.use((req, res, next) => {
 });
 
 // Fichiers statiques (HTML, CSS, JSON, images...)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '/public')));
 
 // --- ROUTES ---
 
@@ -283,7 +283,7 @@ app.get('/check-session', (req, res) => {
 
 // Accueil
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '/public', '/index.html'));
 });
 
 // Démarrer serveur
