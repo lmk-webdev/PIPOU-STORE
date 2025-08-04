@@ -25,10 +25,9 @@ const { createClient } = require('redis');
 const redisClient = createClient({
   url: process.env.REDIS_URL,
 });
-
 redisClient.connect().catch(console.error);
 
-// Middleware session unique avec Redis
+// Session middleware
 app.use(
   session({
     store: new RedisStore({ client: redisClient }),
@@ -37,14 +36,14 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // mettre true en prod avec HTTPS
+      secure: false, // true en prod avec HTTPS
       sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 2, // 2h
     },
   })
 );
 
-// Sécurité HTTP headers (CSP adapté)
+// Sécurité headers
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -61,7 +60,7 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiter login
+// Limiteur de requêtes pour login
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -79,16 +78,12 @@ const ensureDirExists = async (dir) => {
 };
 ensureDirExists(fondsPath);
 
-// Multer configuration upload image
+// Upload images
 const upload = multer({
   dest: fondsPath,
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (
-      file.mimetype === 'image/jpeg' ||
-      file.mimetype === 'image/png' ||
-      file.mimetype === 'image/gif'
-    ) {
+    if (['image/jpeg', 'image/png', 'image/gif'].includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error('Seulement les images jpg, png, gif sont acceptées'));
@@ -96,13 +91,13 @@ const upload = multer({
   },
 });
 
-// Middleware auth
+// Auth middleware
 function requireLogin(req, res, next) {
   if (req.session.authenticated) return next();
   res.status(401).json({ error: 'Non authentifié' });
 }
 
-// Protection admin.html
+// Protection de admin.html
 app.use((req, res, next) => {
   if (req.path === '/admin.html' && !req.session.authenticated) {
     return res.redirect('/login.html');
@@ -110,25 +105,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Fichiers statiques (HTML, CSS, JSON, images...)
-app.use(express.static(path.join(__dirname, '/public')));
+// ✅ Fichiers statiques
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- ROUTES ---
 
 // Login
 app.post('/login', loginLimiter, async (req, res) => {
-  try {
-    const { password } = req.body;
-    if (!password) return res.status(400).json({ error: 'Mot de passe manquant' });
-    if (password === ADMIN_PASSWORD) {
-      req.session.authenticated = true;
-      return res.sendStatus(200);
-    }
-    res.status(401).json({ error: 'Mot de passe incorrect' });
-  } catch (err) {
-    console.error('Erreur dans /login:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'Mot de passe manquant' });
+  if (password === ADMIN_PASSWORD) {
+    req.session.authenticated = true;
+    return res.sendStatus(200);
   }
+  res.status(401).json({ error: 'Mot de passe incorrect' });
 });
 
 // Logout
@@ -138,7 +128,7 @@ app.post('/logout', (req, res) => {
   });
 });
 
-// Ajouter article
+// Ajouter un article
 const ARTICLES_FILE = path.join(__dirname, 'public/articles.json');
 
 app.post(
@@ -155,10 +145,9 @@ app.post(
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     try {
-      const nouvelArticle = req.body;
-      nouvelArticle.id = Date.now();
-
+      const nouvelArticle = { ...req.body, id: Date.now() };
       let articles = [];
+
       try {
         const data = await fs.readFile(ARTICLES_FILE, 'utf-8');
         articles = JSON.parse(data);
@@ -168,13 +157,13 @@ app.post(
       await fs.writeFile(ARTICLES_FILE, JSON.stringify(articles, null, 2));
       res.status(201).json({ message: 'Article ajouté' });
     } catch (err) {
-      console.error('Erreur sauvegarde article:', err);
-      res.status(500).json({ error: 'Erreur sauvegarde article' });
+      console.error('Erreur ajout article:', err);
+      res.status(500).json({ error: 'Erreur serveur' });
     }
   }
 );
 
-// Modifier article
+// Modifier un article
 app.put(
   '/articles/:id',
   requireLogin,
@@ -190,23 +179,18 @@ app.put(
 
     try {
       const id = parseInt(req.params.id);
-      let articles = [];
-      try {
-        const data = await fs.readFile(ARTICLES_FILE, 'utf-8');
-        articles = JSON.parse(data);
-      } catch (_) {
-        return res.status(500).json({ error: 'Erreur lecture articles' });
-      }
-
+      const data = await fs.readFile(ARTICLES_FILE, 'utf-8');
+      const articles = JSON.parse(data);
       const index = articles.findIndex(a => a.id === id);
+
       if (index === -1) return res.status(404).json({ error: 'Article introuvable' });
 
       articles[index] = { ...req.body, id };
       await fs.writeFile(ARTICLES_FILE, JSON.stringify(articles, null, 2));
-      res.json({ message: 'Article modifié avec succès' });
+      res.json({ message: 'Article modifié' });
     } catch (err) {
-      console.error('Erreur modification article:', err);
-      res.status(500).json({ error: 'Erreur modification article' });
+      console.error('Erreur modif article:', err);
+      res.status(500).json({ error: 'Erreur serveur' });
     }
   }
 );
@@ -215,27 +199,23 @@ app.put(
 app.delete('/articles/:id', requireLogin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    let articles = [];
-    try {
-      const data = await fs.readFile(ARTICLES_FILE, 'utf-8');
-      articles = JSON.parse(data);
-    } catch (_) {
-      return res.status(500).json({ error: 'Erreur lecture articles' });
+    const data = await fs.readFile(ARTICLES_FILE, 'utf-8');
+    const articles = JSON.parse(data);
+    const newArticles = articles.filter(a => a.id !== id);
+
+    if (newArticles.length === articles.length) {
+      return res.status(404).json({ error: 'Article introuvable' });
     }
 
-    const newArticles = articles.filter(a => a.id !== id);
-    if (newArticles.length === articles.length)
-      return res.status(404).json({ error: 'Article introuvable' });
-
     await fs.writeFile(ARTICLES_FILE, JSON.stringify(newArticles, null, 2));
-    res.json({ message: 'Article supprimé avec succès' });
+    res.json({ message: 'Article supprimé' });
   } catch (err) {
     console.error('Erreur suppression article:', err);
-    res.status(500).json({ error: 'Erreur suppression article' });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// Lire et modifier fond
+// Fond d’écran
 const FOND_FILE = path.join(__dirname, 'public/fond.json');
 
 app.post('/fond', requireLogin, async (req, res) => {
@@ -243,12 +223,12 @@ app.post('/fond', requireLogin, async (req, res) => {
     await fs.writeFile(FOND_FILE, JSON.stringify(req.body, null, 2));
     res.json({ message: 'Fond mis à jour' });
   } catch (err) {
-    console.error('Erreur sauvegarde fond:', err);
-    res.status(500).json({ error: 'Erreur sauvegarde fond' });
+    console.error('Erreur fond:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// Upload image de fond
+// Upload fond
 app.post('/upload-fond', requireLogin, upload.single('fond'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Fichier manquant' });
@@ -258,21 +238,20 @@ app.post('/upload-fond', requireLogin, upload.single('fond'), async (req, res) =
     res.json({ message: 'Fond uploadé', path: imagePath });
   } catch (err) {
     console.error('Erreur upload fond:', err);
-    res.status(500).json({ error: 'Erreur upload fond' });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
 // Génération description automatique
 app.get('/generate-description', requireLogin, (req, res) => {
   const { nom } = req.query;
-  if (!nom || typeof nom !== 'string') {
-    return res.status(400).json({ error: 'Nom du produit requis' });
-  }
+  if (!nom) return res.status(400).json({ error: 'Nom du produit requis' });
+
   const description = `Le produit "${nom}" allie style, originalité et confort. Un indispensable pour affirmer ton look.`;
   res.json({ description });
 });
 
-// Check session
+// Vérifier session
 app.get('/check-session', (req, res) => {
   if (req.session.authenticated) {
     res.sendStatus(200);
@@ -281,12 +260,12 @@ app.get('/check-session', (req, res) => {
   }
 });
 
-// Accueil
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/public', '/index.html'));
-});
+// (Optionnel) Rediriger toutes les routes non trouvées vers index.html
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// });
 
-// Démarrer serveur
+// Lancement du serveur
 app.listen(PORT, () => {
   console.log(`✅ Serveur en ligne : http://localhost:${PORT}`);
 });
